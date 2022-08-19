@@ -24,3 +24,15 @@ INSERTNEWENVIRONMENT\bin\python -m pip install -r requirements.txt
 we start the server by using the below command in terminal
 
 uvicorn  main:app
+
+uvicorn  main:app --reload    ----> this is for continuous auto reload
+
+
+Special note: FastAPI looks for first match in the API calls,so order matters while writing
+
+
+using postman for testing API calls
+
+in postman go to Body thgen choose the JSON by choosing raw
+then type any thing you want to send it to the dictionary inside the function of API
+check the console in vscode to see te content
