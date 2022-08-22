@@ -36,3 +36,16 @@ using postman for testing API calls
 in postman go to Body thgen choose the JSON by choosing raw
 then type any thing you want to send it to the dictionary inside the function of API
 check the console in vscode to see te content
+
+
+Auto documentation 
+http://127.0.0.1:8000/docs#/ 
+http://127.0.0.1:8000/redoc
+
+create app folder to keep all the files
+
+created __init__.py file to packages
+
+modify the start server command
+
+uvicorn  app.main:app --reload
