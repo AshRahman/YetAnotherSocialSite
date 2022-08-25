@@ -49,3 +49,7 @@ created __init__.py file to packages
 modify the start server command
 
 uvicorn  app.main:app --reload
+
+
+POSTGRES Troubleshooting:
+cant insert rows---->didnt specify primary key,so the coloumns were read only

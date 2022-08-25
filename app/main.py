@@ -27,7 +27,7 @@ def find_post(id):
         
         
 def find_index_post(id):
-    for i, p in enumerate(my_posts):
+    for i, p in enumerate(my_posts): #enumerate adds counter
         if p['id'] == id:
             return i
     
