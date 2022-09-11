@@ -1,5 +1,6 @@
 
 from hashlib import new
+from sqlite3 import Cursor
 from textwrap import indent
 from turtle import pos
 from typing import Optional
@@ -7,6 +8,9 @@ from fastapi import FastAPI,Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
 
 app = FastAPI()
 
@@ -15,8 +19,18 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True 
-    rating: Optional[int]=None
-
+while True:  
+    try:
+        conn =  psycopg2.connect(host='localhost', database="YASS",user='postgres',password='123', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("connection successful")
+        break
+    except Exception as error:
+        print("Connection failed")
+        print("Error: ", error)
+        time.sleep(2)
+    
+    
 my_posts=[{"title": "title of post 1", "content": "content of post 1", "id": 1},
           {"title": "favourite food", "content": "pizza","id":2 }]
 
