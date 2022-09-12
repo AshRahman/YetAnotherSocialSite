@@ -53,17 +53,21 @@ async def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts=cursor.fetchall()
+    print(posts)
+    return {"data": posts}
 
 #
 @app.post("/posts",status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
+    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING* """,
+                   (post.title, post.content, post.published)) # this is sql injection safe
+    conn.commit() # for inserting data you have to commit 
+    new_post = cursor.fetchone()
     
    
-    post_dict= post.dict() #makes the post into python dictionary
-    post_dict['id'] = randrange(0,1000000) #assigns random number into id
-    my_posts.append(post_dict) #appends the post into dictionary
-    return {"data":post_dict}
+    return {"data":new_post}
 #title str, content str, category, bool published 
 @app.get("/posts/latest")
 def get_latest_post():
@@ -71,8 +75,11 @@ def get_latest_post():
     return{"detail":post}
 
 @app.get("/posts/{id}")
-def get_post(id:int, response: Response):
-    post=find_post(id) #the id comes as a string so we need to convert
+def get_post(id:str):
+    cursor.execute("""SELECT * FROM posts where id= %s """, (str(id)))
+    post=cursor.fetchone()
+    
+    
     if not post:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND,
                             detail= f"post with id: {id} was not found")
@@ -84,23 +91,24 @@ def get_post(id:int, response: Response):
 @app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
     #deleting post
-    index = find_index_post(id)
-    if index == None:
+    
+    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING * """,(str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+    if deleted_post== None:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with id {id} does not exist")
-    my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
     
-    index = find_index_post(id)
-    if index == None:
+    updated_post = cursor.execute("""UPDATE posts SET title = %s, content= %s, published = %s WHERE id = %s RETURNING *""",(post.title,post.content,post.published, str(id)))
+    conn.commit()
+    if updated_post == None:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with id {id} does not exist")
     
-    post_dict=post.dict()# create a new dictionary with update content
-    post_dict['id'] =id #adding the id
-    my_posts[index] = post_dict #replacing the post
-    return{"data": post_dict}
+    
+    return{"data": updated_post}
     
