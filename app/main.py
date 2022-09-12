@@ -1,24 +1,20 @@
 
-from hashlib import new
-from sqlite3 import Cursor
-from textwrap import indent
-from turtle import pos
-from typing import Optional
+
 from fastapi import FastAPI,Response, status, HTTPException
-from fastapi.params import Body
 from pydantic import BaseModel
-from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 
 app = FastAPI()
 
-#schema model
+'''----------------------Post Schema Model----------------------------'''
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True 
+    
+'''----------------------Database Connection----------------------------'''    
 while True:  
     try:
         conn =  psycopg2.connect(host='localhost', database="YASS",user='postgres',password='123', cursor_factory=RealDictCursor)
@@ -30,10 +26,7 @@ while True:
         print("Error: ", error)
         time.sleep(2)
     
-    
-my_posts=[{"title": "title of post 1", "content": "content of post 1", "id": 1},
-          {"title": "favourite food", "content": "pizza","id":2 }]
-
+'''----------------------Custom Functions----------------------------'''
 def find_post(id):
     for p in my_posts:
         if p["id"] == id:
@@ -45,11 +38,12 @@ def find_index_post(id):
         if p['id'] == id:
             return i
     
-    
+ '''----------------------Root Page----------------------------'''   
 @app.get("/") # This is a decorator, for API calls
 async def root():
     return{"message": "Welcome to the API!!!"}
 
+'''----------------------Get All Post----------------------------'''
 
 @app.get("/posts")
 def get_posts():
@@ -59,6 +53,8 @@ def get_posts():
     return {"data": posts}
 
 #
+'''----------------------Make new Post----------------------------'''
+
 @app.post("/posts",status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
     cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING* """,
@@ -69,10 +65,18 @@ def create_posts(post: Post):
    
     return {"data":new_post}
 #title str, content str, category, bool published 
+
+
+'''----------------------Get Latest Post----------------------------'''
+
 @app.get("/posts/latest")
 def get_latest_post():
     post=my_posts[len(my_posts)-1]
     return{"detail":post}
+
+
+
+'''----------------------Get Id wise Post----------------------------'''
 
 @app.get("/posts/{id}")
 def get_post(id:str):
@@ -83,10 +87,12 @@ def get_post(id:str):
     if not post:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND,
                             detail= f"post with id: {id} was not found")
-        '''response.status_code = status.HTTP_404_NOT_FOUND #uses the status library
-        return{"message": f"post with id: {id} was not found"}  
-        '''  
+       
     return {"post_detail": post}
+
+
+
+'''----------------------Delete Post----------------------------'''
     
 @app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
@@ -100,6 +106,9 @@ def delete_post(id: int):
                              detail=f"post with id {id} does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
+
+'''----------------------Update Post----------------------------'''
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
     
