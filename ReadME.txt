@@ -53,3 +53,14 @@ uvicorn  app.main:app --reload
 
 POSTGRES Troubleshooting:
 cant insert rows---->didnt specify primary key,so the coloumns were read only
+
+POSTGRES driver
+
+pip install psycopg2
+
+
+SQLALCHEMY for ORM
+pip install sqlalchemy
+
+Create a new file called database.py
+in there 
