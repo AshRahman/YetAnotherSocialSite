@@ -1,10 +1,25 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
+from .database import Sessionlocal, engine
+from . import models
 import psycopg2
 import time
+from sqlalchemy.orm import Session
+
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+
+def get_db():
+    db = Sessionlocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 """----------------------Post Schema Model----------------------------"""
 
@@ -46,6 +61,11 @@ def find_index_post(id):
     for i, p in enumerate(my_posts):  # enumerate adds counter
         if p["id"] == id:
             return i
+
+
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    return {"status": "Success"}
 
 
 """----------------------Root Page----------------------------"""
