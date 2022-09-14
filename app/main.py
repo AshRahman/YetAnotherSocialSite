@@ -1,24 +1,18 @@
+from multiprocessing import synchronize
+from turtle import pos
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from psycopg2.extras import RealDictCursor
+from .database import engine, get_db
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from .database import Sessionlocal, engine
 from . import models
 import psycopg2
 import time
-from sqlalchemy.orm import Session
 
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-
-def get_db():
-    db = Sessionlocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 """----------------------Post Schema Model----------------------------"""
@@ -65,7 +59,9 @@ def find_index_post(id):
 
 @app.get("/sqlalchemy")
 def test_posts(db: Session = Depends(get_db)):
-    return {"status": "Success"}
+    posts = db.query(models.Post).all()
+    print(posts)
+    return {"data": posts}
 
 
 """----------------------Root Page----------------------------"""
@@ -80,9 +76,10 @@ async def root():
 
 
 @app.get("/posts")
-def get_posts():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
+def get_posts(db: Session = Depends(get_db)):
+    # cursor.execute("""SELECT * FROM posts""")
+    # posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
     print(posts)
     return {"data": posts}
 
@@ -91,13 +88,17 @@ def get_posts():
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post):
-    cursor.execute(
-        """INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING* """,
-        (post.title, post.content, post.published),
-    )  # this is sql injection safe
-    conn.commit()  # for inserting data you have to commit
-    new_post = cursor.fetchone()
+def create_posts(post: Post, db: Session = Depends(get_db)):
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    # cursor.execute(
+    #     """INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING* """,
+    #     (post.title, post.content, post.published),
+    # )  # this is sql injection safe
+    # conn.commit()  # for inserting data you have to commit
+    # new_post = cursor.fetchone()
 
     return {"data": new_post}
 
@@ -118,16 +119,19 @@ def get_latest_post():
 
 
 @app.get("/posts/{id}")
-def get_post(id: str):
-    cursor.execute("""SELECT * FROM posts where id= %s """, (str(id)))
-    post = cursor.fetchone()
+def get_post(id: int, db: Session = Depends(get_db)):
+
+    # cursor.execute("""SELECT * FROM posts where id= %s """, (str(id)))
+    # post = cursor.fetchone()
+    post = (
+        db.query(models.Post).filter(models.Post.id == id).first()
+    )  # doesnt work if first is not given,recursive error
 
     if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id: {id} was not found",
         )
-
     return {"post_detail": post}
 
 
@@ -135,17 +139,21 @@ def get_post(id: str):
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
+def delete_post(id: int, db: Session = Depends(get_db)):
     # deleting post
 
-    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING * """, (str(id),))
-    deleted_post = cursor.fetchone()
-    conn.commit()
-    if deleted_post == None:
+    # cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING * """, (str(id),))
+    # deleted_post = cursor.fetchone()
+    # conn.commit()
+    post = db.query(models.Post).filter(models.Post.id == id)
+
+    if post.first() == None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id {id} does not exist",
         )
+    post.delete(synchronize_session=False)
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -64,3 +64,6 @@ pip install sqlalchemy
 
 Create a new file called database.py
 in there 
+
+Remember to properly import 
+code was not running for importing wrong modules
