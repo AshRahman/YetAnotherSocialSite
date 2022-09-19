@@ -1,10 +1,5 @@
-from pydantic import BaseModel
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
+from datetime import datetime
+from pydantic import BaseModel, EmailStr
 
 
 class PostBase(BaseModel):
@@ -15,3 +10,25 @@ class PostBase(BaseModel):
 
 class PostCreate(PostBase):
     pass
+
+
+class Post(PostBase):
+    # inherits from PostBase
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    created_at: datetime
+
+    class Config:
+        orm_mode = True

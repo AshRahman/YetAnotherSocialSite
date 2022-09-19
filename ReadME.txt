@@ -67,3 +67,6 @@ in there
 
 Remember to properly import 
 code was not running for importing wrong modules
+
+creating schemas file and adding the shcema modules
+creating seperate classes for more control
