@@ -70,3 +70,9 @@ code was not running for importing wrong modules
 
 creating schemas file and adding the shcema modules
 creating seperate classes for more control
+
+creating routers to split up path operations
+
+using APIRouter fro routing the files
+
+using prefix to reduce the path length like /posts---->/
