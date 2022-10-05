@@ -76,3 +76,7 @@ creating routers to split up path operations
 using APIRouter fro routing the files
 
 using prefix to reduce the path length like /posts---->/
+
+JWT Tokens--------------------
+
+ 

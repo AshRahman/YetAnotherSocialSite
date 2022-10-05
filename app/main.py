@@ -3,7 +3,7 @@ from psycopg2.extras import RealDictCursor
 from .database import engine
 from passlib.context import CryptContext
 from . import models
-from .routers import post, user
+from .routers import post, user, auth
 import psycopg2
 import time
 
@@ -58,3 +58,4 @@ async def root():
 
 app.include_router(post.router)
 app.include_router(user.router)
+app.include_router(auth.router)
